@@ -1,30 +1,40 @@
-#include <zephyr/drivers/gpio.h>
 #include <zephyr/kernel.h>
+#include <zephyr/drivers/led_strip.h>
+#include <zephyr/device.h>
 #include <zephyr/logging/log.h>
-
-#define SLEEP_TIME_MS 1000
-
-/* The devicetree node identifier for the "led0" alias. */
-#define LED_NODE DT_ALIAS(led0)
-
-static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED_NODE, gpios);
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
+#define LED_STRIP_NODE DT_ALIAS(led_strip)
+#define NUM_LEDS 1
+
+static const struct device *strip = DEVICE_DT_GET(LED_STRIP_NODE);
+
+static struct led_rgb colors[] = {
+    { .r = 255, .g = 0,   .b = 0   },
+    { .r = 0,   .g = 255, .b = 0   },
+    { .r = 0,   .g = 0,   .b = 255 },
+};
+
+static const char * const color_names[] = { "Red", "Green", "Blue" };
+
 int main(void)
 {
-    bool led_state = true;
+    if (!device_is_ready(strip)) {
+        LOG_ERR("LED strip device not ready");
+        return -ENODEV;
+    }
 
-    if (!gpio_is_ready_dt(&led)) return 0;
+    LOG_INF("LED strip device ready");
 
-    if (gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE) < 0) return 0;
+    int color_selector = 0;
 
     while (1) {
-        if (gpio_pin_toggle_dt(&led) < 0) return 0;
-
-        led_state = !led_state;
-        LOG_INF("LED state: %s", led_state ? "ON" : "OFF");
-        k_msleep(SLEEP_TIME_MS);
+        LOG_INF("Color: %s", color_names[color_selector]);
+        led_strip_update_rgb(strip, &colors[color_selector], NUM_LEDS);
+        color_selector = (color_selector + 1) % ARRAY_SIZE(colors);
+        k_sleep(K_SECONDS(3));
     }
+
     return 0;
 }
