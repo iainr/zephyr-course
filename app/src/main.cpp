@@ -30,10 +30,10 @@ int main(void)
     int color_selector = 0;
 
     while (1) {
-        LOG_INF("Color: %s", color_names[color_selector]);
+        LOG_INF("Color: %s, sleep_ms: %d", color_names[color_selector], CONFIG_BLINK_SLEEP_MS);
         led_strip_update_rgb(strip, &colors[color_selector], NUM_LEDS);
         color_selector = (color_selector + 1) % ARRAY_SIZE(colors);
-        k_sleep(K_SECONDS(3));
+        k_msleep(CONFIG_BLINK_SLEEP_MS);
     }
 
     return 0;
