@@ -5,10 +5,10 @@
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
 
-#define LED_STRIP_NODE DT_ALIAS(led_strip)
-#define NUM_LEDS 1
 
-static const struct device *strip = DEVICE_DT_GET(LED_STRIP_NODE);
+#define NUM_LEDS DT_PROP(DT_ALIAS(rgb_led), chain_length)
+
+static const struct device *strip = DEVICE_DT_GET(DT_ALIAS(rgb_led));
 
 static struct led_rgb colors[] = {
     { .r = 255, .g = 0,   .b = 0   },
@@ -30,10 +30,10 @@ int main(void)
     int color_selector = 0;
 
     while (1) {
-        LOG_INF("Color: %s, sleep_ms: %d", color_names[color_selector], CONFIG_BLINK_SLEEP_MS);
+        LOG_INF("Color: %s, sleep_ms: %d", color_names[color_selector], CONFIG_APP_HEARTBEAT_PERIOD_MS);
         led_strip_update_rgb(strip, &colors[color_selector], NUM_LEDS);
         color_selector = (color_selector + 1) % ARRAY_SIZE(colors);
-        k_msleep(CONFIG_BLINK_SLEEP_MS);
+        k_msleep(CONFIG_APP_HEARTBEAT_PERIOD_MS);
     }
 
     return 0;
